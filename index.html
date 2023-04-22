@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Earth</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: black;
+            overflow: hidden;
+        }
+
+        h1 {
+            background-color: black;
+            color: white;
+            text-align: center;
+            font-size: 3em;
+        }
+
+        #container {
+            margin: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Planet: Earth</h1>
+
+    <!-- add three.js from cloudflare CDN using cdnjs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.151.3/three.js" 
+    integrity="sha512-BwyZPvtawNInmLsREIDelsBWnyXzmR11MF6SG1VSkQ51YhMkdNFxL9sGKgRzTX7drQzCLVheb4sobHNGpwCn+w==" 
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <!-- javascript for 3D -->
+    <div id="container" width="100vw" height="100vh"></div>
+    <script>
+
+        const container = document.querySelector('#container');
+
+        const renderer = new THREE.WebGLRenderer();
+        const WIDTH = window.innerWidth;
+        const HEIGHT = window.innerHeight;
+        renderer.setSize(WIDTH, HEIGHT);
+
+        //camera
+        const VIEW_ANGLE = 45;
+        const ASPECT = WIDTH / HEIGHT;
+        const NEAR = 0.1;
+        const FAR = 10000;
+        const camera = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR);
+        camera.position.set(0, 0, 500);
+        camera.lookAt(0, 0, 0);
+
+        //scene
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x080001);
+
+        //sphere
+        const RADIUS = 200;
+        const SEGMENTS = 50;
+        const RINGS = 50;
+        const globe = new THREE.Group();
+        //texture loader
+        var loader = new THREE.TextureLoader();
+        loader.load('./earth-texture-nasa.jpg', function (texture) {
+            // Create the sphere
+            var sphere = new THREE.SphereGeometry(RADIUS, SEGMENTS, RINGS);
+            // Map the texture to the material. 
+            var material = new THREE.MeshBasicMaterial({ map: texture, overdraw: 0.5 });
+            // Create a new mesh with sphere geometry.
+            var mesh = new THREE.Mesh(sphere, material);
+            // Add mesh to globe
+            globe.add(mesh);
+        });
+        globe.position.z = -300;
+
+
+        //light
+        const pointLight = new THREE.PointLight(0xFFFFFF);
+        pointLight.position.x = 10;
+        pointLight.position.y = 50;
+        pointLight.position.z = 400;
+
+        //add elements to scene and render in DOM container
+        scene.add(globe);
+        scene.add(pointLight);
+        container.appendChild(renderer.domElement);
+
+
+        //animation
+        function animate() {
+            requestAnimationFrame(animate);
+            globe.rotation.y += 0.0008;
+            renderer.render(scene, camera);
+        };
+        // Schedule the first frame:
+        requestAnimationFrame(animate);
+
+        //animate when direction arrows are pressed
+        function animationBuilder(direction) {
+            return function animateRotate() {
+                switch (direction) {
+                    case 'up':
+                        globe.rotation.x -= 0.05;
+                        break;
+                    case 'down':
+                        globe.rotation.x += 0.05;
+                        break;
+                    case 'left':
+                        globe.rotation.y -= 0.05;
+                        break;
+                    case 'right':
+                        globe.rotation.y += 0.05;
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+        //direcions object for animation on key press
+        var animateDirection = {
+            up: animationBuilder('up'),
+            down: animationBuilder('down'),
+            left: animationBuilder('left'),
+            right: animationBuilder('right')
+        }
+        //key press event listener
+        function checkKey(e) {
+            e = e || window.event;
+            e.preventDefault();
+            //trigger appropriate animation using keycodes:
+            if (e.keyCode == '38') {
+                animateDirection.up();
+            } else if (e.keyCode == '40') {
+                animateDirection.down();
+            } else if (e.keyCode == '37') {
+                animateDirection.left();
+            } else if (e.keyCode == '39') {
+                animateDirection.right();
+            }
+        }
+        //add event listener to window
+        document.onkeydown = checkKey;
+
+
+
+    </script>
+
+</body>
+
+</html>
